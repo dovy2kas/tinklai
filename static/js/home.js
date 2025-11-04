@@ -14,15 +14,12 @@
   const svcLoading = $('#svc-loading');
   const svcContent = $('#svc-content');
   const svcError = $('#svc-error');
-  const svcReserve = $('#svc-reserve');
 
   function openSvcModal(){ show(svcModal); }
   function closeSvcModal(){ hide(svcModal); }
 
   function renderServices(data) {
     svcTitle.textContent = `Paslaugos – ${data.n.vardas} ${data.n.pavarde} (${data.n.miestas})`;
-    svcReserve.href = `reserve.php?elektrikas=${data.elektrikas}`;
-    show(svcReserve);
 
     svcContent.innerHTML = '';
     if (!data.paslaugos || !data.paslaugos.length) {
@@ -38,7 +35,7 @@
               ${svc.aprasas ? `<div class="text-sm text-fg-font/80 mt-1">${svc.aprasas}</div>` : ''}
             </div>
             <div class="text-right whitespace-nowrap text-sm">
-              <div class="font-semibold">${Number(svc.kaina_bazine).toFixed(2)} €</div>
+              <div class="text-base font-semibold text-fg-font">${Number(svc.kaina_bazine).toFixed(2)} €</div>
               <div class="text-fg-font/70">${parseInt(svc.tipine_trukme_min)} min</div>
             </div>
           </div>
@@ -49,9 +46,9 @@
   }
 
   async function loadServices(eid) {
-    hide(svcError); hide(svcContent); show(svcLoading); hide(svcReserve);
+    hide(svcError); hide(svcContent); show(svcLoading);
     try {
-      const res = await fetch(`services_api.php?elektrikas=${encodeURIComponent(eid)}`, { headers: { 'Accept': 'application/json' } });
+      const res = await fetch(`api/services.php?elektrikas=${encodeURIComponent(eid)}`, { headers: { 'Accept': 'application/json' } });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       renderServices(data);

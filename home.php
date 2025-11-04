@@ -59,6 +59,7 @@ function photos_from_json($json, $max = 3): array {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="./static/js/colors.js"></script>
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <style>
     .aspect-square{position:relative;width:100%;padding-bottom:100%}
     .aspect-square > img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:.75rem}
@@ -71,20 +72,20 @@ function photos_from_json($json, $max = 3): array {
       <span class="text-2xl font-semibold text-fg-font">Elektrikus vienijanti sistema</span>
       <div class="hidden w-full md:block md:w-auto">
         <ul class="font-medium flex flex-col md:flex-row md:space-x-8">
-          <li><a href="home.php" class="block py-2 px-3 text-pink">Pagrindinis</a></li>
+          <li><a href="home.php" class="block py-2 px-3 text-pink transition duration-150 ease-in">Pagrindinis</a></li>
           <?php if ($role === 'ELEKTRIKAS'): ?>
-            <li><a href="services.php" class="block py-2 px-3 text-comment hover:text-pink">Mano paslaugos</a></li>
+            <li><a href="services.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">Mano paslaugos</a></li>
           <?php endif; ?>
-          <li><a href="profile.php" class="block py-2 px-3 text-comment hover:text-pink">Profilis</a></li>
+          <li><a href="profile.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">Profilis</a></li>
           <?php if ($loggedIn): ?>
             <li>
               <form action="logout.php" method="post">
-                <button class="py-2 px-3 rounded-sm bg-red-600 text-comment hover:text-pink">Atsijungti</button>
+                <button class="py-2 px-3 rounded-sm bg-red-600 text-comment hover:text-pink transition duration-150 ease-in">Atsijungti</button>
               </form>
             </li>
           <?php else: ?>
-            <li><a href="login.php" class="block py-2 px-3 text-comment hover:text-pink">Prisijungti</a></li>
-            <li><a href="register.php" class="block py-2 px-3 text-comment hover:text-pink">Registruotis</a></li>
+            <li><a href="login.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">Prisijungti</a></li>
+            <li><a href="register.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">Registruotis</a></li>
           <?php endif; ?>
         </ul>
       </div>
@@ -164,9 +165,13 @@ function photos_from_json($json, $max = 3): array {
     <div class="absolute inset-0 flex items-center justify-center p-4">
       <div role="dialog" aria-modal="true" aria-labelledby="svc-title"
            class="w-full max-w-2xl rounded-xl bg-fg shadow-lg">
-        <div class="flex items-center justify-between p-4 border-b border-bg">
+        <div class="flex items-center justify-between p-4 border-b border-purple">
           <h3 id="svc-title" class="text-lg font-semibold text-fg-font">Paslaugos</h3>
-          <button id="svc-close" type="button" class="p-2 rounded hover:bg-bg" aria-label="Uždaryti">✕</button>
+            <button id="svc-close" type="button"
+            class="p-2 rounded text-fg-font hover:text-pink transition-colors duration-200"
+            aria-label="Uždaryti">
+            <i class="bx bx-x text-2xl leading-none"></i>
+            </button>
         </div>
         <div class="p-0">
           <div id="svc-loading" class="p-6 text-fg-font/80">Kraunama…</div>
@@ -175,7 +180,7 @@ function photos_from_json($json, $max = 3): array {
         </div>
         <div class="p-4 flex justify-end gap-2">
           <a id="svc-reserve" href="#" class="px-4 py-2 bg-indigo-600 text-white rounded hidden">Rezervuoti konsultaciją</a>
-          <button type="button" class="px-4 py-2 bg-bg rounded" id="svc-ok">Uždaryti</button>
+          <button type="button" class="px-4 py-2 bg-fg-light rounded text-fg-font hover:bg-comment transition duration-150 ease-in" id="svc-ok">Uždaryti</button>
         </div>
       </div>
     </div>
@@ -186,9 +191,13 @@ function photos_from_json($json, $max = 3): array {
     <div class="absolute inset-0 flex items-center justify-center p-4">
       <div role="dialog" aria-modal="true" aria-labelledby="resv-title"
            class="w-full max-w-xl rounded-xl bg-fg shadow-lg">
-        <div class="flex items-center justify-between p-4 border-b border-bg">
+        <div class="flex items-center justify-between p-4 border-b border-purple">
           <h3 id="resv-title" class="text-lg font-semibold text-fg-font">Pasirinkite laiką</h3>
-          <button id="resv-close" type="button" class="p-2 rounded hover:bg-bg" aria-label="Uždaryti">✕</button>
+          <button id="resv-close" type="button"
+            class="p-2 rounded text-fg-font hover:text-pink transition-colors duration-200"
+            aria-label="Uždaryti">
+            <i class="bx bx-x text-2xl leading-none"></i>
+            </button>
         </div>
         <div class="p-4 space-y-4">
           <div class="flex items-center gap-3">
@@ -199,14 +208,14 @@ function photos_from_json($json, $max = 3): array {
           <div id="resv-error" class="text-red-700 hidden"></div>
           <div id="resv-slots" class="grid grid-cols-2 md:grid-cols-3 gap-2"></div>
         </div>
-        <div class="p-4 flex justify-end gap-2 border-t border-bg">
-          <button type="button" class="px-4 py-2 bg-bg rounded" id="resv-cancel">Atšaukti</button>
+        <div class="p-4 flex justify-end gap-2 border-t border-purple">
+          <button type="button" class="px-4 py-2 bg-fg-light rounded text-fg-font hover:bg-comment transition duration-150 ease-in" id="resv-cancel">Atšaukti</button>
           <form id="resv-form" method="get" action="reserve.php" class="hidden">
             <input type="hidden" name="elektrikas" id="resv-elektrikas">
             <input type="hidden" name="date" id="resv-date-hidden">
             <input type="hidden" name="start" id="resv-start-hidden">
           </form>
-          <button id="resv-next" type="button" class="px-4 py-2 bg-indigo-600 text-white rounded disabled:opacity-50" disabled>
+          <button id="resv-next" type="button" class="px-4 py-2 bg-pink text-fg-font rounded disabled:opacity-50 hover:bg-green transition duration-150 ease-in" disabled>
             Tęsti
           </button>
         </div>

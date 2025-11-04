@@ -34,6 +34,7 @@ if ($mysqli->connect_errno) {
 }
 $mysqli->set_charset('utf8mb4');
 
+/* --- User & role --- */
 $userId = (int)$_SESSION['user_id'];
 $stmt = $mysqli->prepare("SELECT vardas, role FROM Naudotojas WHERE id = ? LIMIT 1");
 $stmt->bind_param("i", $userId);
@@ -50,7 +51,10 @@ if ($user['role'] !== 'ELEKTRIKAS') {
   flash('flash_error', 'Prieiga tik elektrikams.');
   redirect('home.php');
 }
+$loggedIn = true;
+$role = $user['role'];
 
+/* --- Add service handler --- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_service') {
   $paslaugaId = isset($_POST['paslauga']) ? (int)$_POST['paslauga'] : 0;
   $kaina = isset($_POST['kaina_bazine']) ? trim($_POST['kaina_bazine']) : '';
@@ -71,15 +75,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     redirect('services.php');
   }
 
-$stmt = $mysqli->prepare("
+  $stmt = $mysqli->prepare("
       INSERT INTO Pasiula (elektriko_profilis, paslauga, kaina_bazine, tipine_trukme_min)
       VALUES (?, ?, ?, ?)
   ");
-  $uid   = $userId;
-  $pid   = $paslaugaId;
   $price = (float)number_format((float)$kaina, 2, '.', '');
-  $dur   = $trukme;
-  $stmt->bind_param("iidi", $uid, $pid, $price, $dur);
+  $stmt->bind_param("iidi", $userId, $paslaugaId, $price, $trukme);
   $ok = $stmt->execute();
   $errno = $stmt->errno;
   $err   = $stmt->error;
@@ -97,6 +98,7 @@ $stmt = $mysqli->prepare("
   redirect('services.php');
 }
 
+/* --- Current offers --- */
 $stmt = $mysqli->prepare("
   SELECT p.paslauga, s.pavadinimas, s.aprasas, p.kaina_bazine, p.tipine_trukme_min
   FROM Pasiula p
@@ -109,6 +111,7 @@ $stmt->execute();
 $offers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
+/* --- Services still available to add --- */
 $stmt = $mysqli->prepare("
   SELECT s.id, s.pavadinimas
   FROM Paslauga s
@@ -130,21 +133,53 @@ $mysqli->close();
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.tailwindcss.com/"></script>
   <script src="./static/js/colors.js"></script>
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body class="bg-bg min-h-screen">
+
+  <!-- NAVBAR (identical look/logic to home.php) -->
   <nav class="bg-fg border-gray-200">
     <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-      <a href="home.php" class="text-2xl font-semibold text-fg-font">Elektrikus vienijanti sistema</a>
+      <span class="text-2xl font-semibold text-fg-font">Elektrikus vienijanti sistema</span>
       <div class="hidden w-full md:block md:w-auto">
-        <ul class="font-medium flex flex-col md:flex-row md:space-x-6">
-          <li><a href="home.php" class="block py-2">Pagrindinis</a></li>
-          <li><a href="services.php" class="block py-2 text-blue-700">Mano paslaugos</a></li>
-          <li><a href="profile.php" class="block py-2">Profilis</a></li>
+        <ul class="font-medium flex flex-col md:flex-row md:space-x-8">
           <li>
-            <form action="logout.php" method="post">
-              <button class="py-2 px-3 rounded-sm bg-red-600 text-white hover:bg-red-700">Atsijungti</button>
-            </form>
+            <a href="home.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">
+              Pagrindinis
+            </a>
           </li>
+          <?php if ($role === 'ELEKTRIKAS'): ?>
+            <li>
+              <a href="services.php" class="block py-2 px-3 text-pink transition duration-150 ease-in">
+                Mano paslaugos
+              </a>
+            </li>
+          <?php endif; ?>
+          <li>
+            <a href="profile.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">
+              Profilis
+            </a>
+          </li>
+          <?php if ($loggedIn): ?>
+            <li>
+              <form action="logout.php" method="post">
+                <button class="py-2 px-3 rounded-sm bg-red-600 text-comment hover:text-pink transition duration-150 ease-in">
+                  Atsijungti
+                </button>
+              </form>
+            </li>
+          <?php else: ?>
+            <li>
+              <a href="login.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">
+                Prisijungti
+              </a>
+            </li>
+            <li>
+              <a href="register.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">
+                Registruotis
+              </a>
+            </li>
+          <?php endif; ?>
         </ul>
       </div>
     </div>
@@ -160,7 +195,7 @@ $mysqli->close();
 
     <div class="flex items-center justify-between mb-4">
       <h1 class="text-2xl font-semibold text-purple">Mano paslaugos</h1>
-      <button id="btn-add" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Pridėti paslaugą</button>
+      <button id="btn-add" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition duration-150 ease-in">Pridėti paslaugą</button>
     </div>
 
     <?php if (empty($offers)): ?>
@@ -183,13 +218,16 @@ $mysqli->close();
     <?php endif; ?>
   </main>
 
+  <!-- Add service modal -->
   <div id="modal" class="fixed inset-0 z-50 hidden">
     <div class="absolute inset-0 bg-black/50"></div>
     <div class="absolute inset-0 flex items-center justify-center p-4">
       <div class="w-full max-w-md rounded-xl bg-fg shadow-lg">
         <div class="flex items-center justify-between p-4 border-b border-bg">
           <h2 class="text-lg font-semibold text-fg-font">Pridėti paslaugą</h2>
-          <button id="modal-close" class="p-2 rounded hover:bg-bg" aria-label="Uždaryti">✕</button>
+          <button id="modal-close" class="p-2 rounded text-fg-font hover:text-pink transition-colors duration-200" aria-label="Uždaryti">
+            <i class="bx bx-x text-2xl leading-none"></i>
+          </button>
         </div>
         <form method="post" class="p-4 space-y-4">
           <input type="hidden" name="action" value="add_service">
@@ -216,8 +254,8 @@ $mysqli->close();
                    class="mt-1 block w-full rounded px-3 py-2 bg-fg-light text-fg-font" placeholder="60">
           </div>
           <div class="pt-2 flex justify-end gap-2">
-            <button type="button" id="modal-cancel" class="px-4 py-2 rounded bg-bg">Atšaukti</button>
-            <button type="submit" class="px-4 py-2 rounded bg-indigo-600 text-white">Pridėti</button>
+            <button type="button" id="modal-cancel" class="px-4 py-2 bg-fg-light rounded text-fg-font hover:bg-comment transition duration-150 ease-in">Atšaukti</button>
+            <button type="submit" class="px-4 py-2 bg-pink text-fg-font rounded hover:bg-green transition duration-150 ease-in">Pridėti</button>
           </div>
         </form>
       </div>

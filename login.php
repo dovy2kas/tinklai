@@ -10,7 +10,7 @@ $DB_PASS = getenv('DB_PASS') ?: '';
 
 const REMEMBER_COOKIE = 'auth_token';
 const REMEMBER_DAYS   = 30;
-const APP_SECRET_KEY  = getenv('APP_SECRET_KEY') ?: '';
+$APP_SECRET_KEY  = getenv('APP_SECRET_KEY') ?: '123';
 
 $sessionLifetime = 0;
 if (!empty($_COOKIE[REMEMBER_COOKIE])) {
@@ -41,7 +41,7 @@ function issue_remember_cookie(int $userId, string $email, string $role): void {
   $exp = time() + (REMEMBER_DAYS * 86400);
   $nonce = bin2hex(random_bytes(8));
   $payload = $userId . '|' . $email . '|' . $role . '|' . $exp . '|' . $nonce;
-  $sig = hash_hmac('sha256', $payload, APP_SECRET_KEY);
+  $sig = hash_hmac('sha256', $payload, $APP_SECRET_KEY);
   $token = base64_encode($payload . '|' . $sig);
   setcookie(REMEMBER_COOKIE, $token, [
     'expires'  => $exp,
@@ -64,7 +64,7 @@ function try_auto_login_from_cookie(mysqli $db): bool {
   if (!ctype_digit($userId) || !ctype_digit($exp)) return false;
   if ((int)$exp < time()) return false;
   $payload = $userId . '|' . $email . '|' . $role . '|' . $exp . '|' . $nonce;
-  $calcSig = hash_hmac('sha256', $payload, APP_SECRET_KEY);
+  $calcSig = hash_hmac('sha256', $payload, $APP_SECRET_KEY);
   if (!hash_equals($calcSig, $sig)) return false;
 
   $stmt = $db->prepare("SELECT id, el_pastas, vardas, role FROM Naudotojas WHERE id = ? AND el_pastas = ? LIMIT 1");
