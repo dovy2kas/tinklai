@@ -34,7 +34,7 @@ $stmt = $mysqli->prepare("
   SELECT e.id AS elektrikas_id, n.vardas, n.pavarde, n.miestas, e.cv, e.nuotraukos
   FROM ElektrikoProfilis e
   JOIN Naudotojas n ON n.id = e.id
-  WHERE e.rodomas_viesai = 1 AND e.statusas = 'PATVIRTINTAS'
+  WHERE e.statusas = 'PATVIRTINTAS'
   ORDER BY e.id DESC
   LIMIT 30
 ");
@@ -67,16 +67,22 @@ function photos_from_json($json, $max = 3): array {
 </head>
 <body class="bg-bg min-h-screen" data-logged-in="<?= $loggedIn ? '1' : '0' ?>">
 
-  <nav class="bg-fg border-gray-200">
+  <nav class="bg-fg border-purple border-b-2 mb-10">
     <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-      <span class="text-2xl font-semibold text-fg-font">Elektrikus vienijanti sistema</span>
+      <span class="text-2xl font-bold text-purple">Elektrikus vienijanti sistema</span>
       <div class="hidden w-full md:block md:w-auto">
         <ul class="font-medium flex flex-col md:flex-row md:space-x-8">
           <li><a href="home.php" class="block py-2 px-3 text-pink transition duration-150 ease-in">Pagrindinis</a></li>
+          <?php if ($role === 'ADMIN'): ?>
+            <li><a href="manage_electricians.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">Elektrikų tvirtinimas</a></li>
+          <?php endif; ?>
           <?php if ($role === 'ELEKTRIKAS'): ?>
             <li><a href="services.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">Mano paslaugos</a></li>
+            <li><a href="manage_reservations.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">Valdyti rezervacijas</a></li>
           <?php endif; ?>
-          <li><a href="profile.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">Profilis</a></li>
+          <?php if ($role === "NAUDOTOJAS"): ?>
+            <li><a href="reservations.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">Mano rezervacijos</a></li>
+          <?php endif; ?>
           <?php if ($loggedIn): ?>
             <li>
               <form action="logout.php" method="post">
@@ -92,13 +98,6 @@ function photos_from_json($json, $max = 3): array {
     </div>
   </nav>
 
-  <header class="max-w-screen-xl mx-auto p-6">
-    <h1 class="text-3xl font-bold text-purple">
-      <?= $loggedIn ? 'Sveikas, ' . h($vardas) . '!' : 'Elektrikus vienijanti sistema' ?>
-    </h1>
-    <p class="text-fg-font/80">Atrask elektrikų darbus, peržiūrėk jų paslaugas ir užsisakyk konsultaciją.</p>
-  </header>
-
   <main class="max-w-screen-xl mx-auto px-6 pb-12">
     <?php if (empty($feed)): ?>
       <div class="rounded-xl bg-fg p-6 shadow text-fg-font/80">Kol kas nėra viešų patvirtintų elektrikų.</div>
@@ -109,12 +108,12 @@ function photos_from_json($json, $max = 3): array {
             $eid = (int)$card['elektrikas_id'];
             $ph  = photos_from_json($card['nuotraukos'], 3);
             $cv  = trim((string)$card['cv']);
-            if ($cv !== '' && mb_strlen($cv) > 180) $cv = mb_substr($cv, 0, 180) . '…';
+            if ($cv !== '' && mb_strlen($cv) > 180) $cv = mb_substr($cv, 0, 250) . '…';
             $reserveHref = !empty($_SESSION['user_id'])
               ? ('reserve.php?elektrikas='.$eid)
               : ('login.php?redirect='.urlencode('reserve.php?elektrikas='.$eid));
           ?>
-          <article class="rounded-xl bg-fg shadow overflow-hidden">
+          <article class="rounded-xl bg-fg shadow overflow-hidden flex flex-col h-full">
             <div class="p-4 flex items-center justify-between gap-2">
               <div>
                 <h3 class="text-lg font-semibold text-fg-font"><?= h($card['vardas'].' '.$card['pavarde']) ?></h3>
@@ -146,14 +145,16 @@ function photos_from_json($json, $max = 3): array {
               <div class="px-4 pb-4 text-sm text-fg-font/90"><?= nl2br(h($cv)) ?></div>
             <?php endif; ?>
 
-            <div class="flex gap-2 w-full">
+            <?php if ($loggedIn && $role !== 'ELEKTRIKAS'): ?>
+              <div class="mt-auto p-4">
                 <button
-                 type="button"
-                 class="js-reserve-link px-3 py-2 rounded bg-purple text-white hover:bg-green text-sm text-center w-full transition duration-150 ease-in"
-                 data-elektrikas="<?= $eid ?>">
-                Rezervuoti konsultaciją
+                  type="button"
+                  class="js-reserve-link px-3 py-2 rounded bg-purple text-white hover:bg-green text-sm text-center w-full transition duration-150 ease-in"
+                  data-elektrikas="<?= (int)$eid ?>">
+                  Rezervuoti konsultaciją
                 </button>
-            </div>
+              </div>
+            <?php endif; ?>
           </article>
         <?php endforeach; ?>
       </div>
@@ -176,7 +177,7 @@ function photos_from_json($json, $max = 3): array {
         <div class="p-0">
           <div id="svc-loading" class="p-6 text-fg-font/80">Kraunama…</div>
           <div id="svc-content" class="divide-y divide-bg hidden"></div>
-          <div id="svc-error" class="p-6 text-red-700 hidden"></div>
+          <div id="svc-error" class="p-6 text-red hidden"></div>
         </div>
         <div class="p-4 flex justify-end gap-2">
           <a id="svc-reserve" href="#" class="px-4 py-2 bg-indigo-600 text-white rounded hidden">Rezervuoti konsultaciją</a>
@@ -186,43 +187,53 @@ function photos_from_json($json, $max = 3): array {
     </div>
   </div>
 
-  <div id="resv-modal" class="fixed inset-0 z-50 hidden" aria-hidden="true">
-    <div class="absolute inset-0 bg-black/50"></div>
-    <div class="absolute inset-0 flex items-center justify-center p-4">
-      <div role="dialog" aria-modal="true" aria-labelledby="resv-title"
-           class="w-full max-w-xl rounded-xl bg-fg shadow-lg">
-        <div class="flex items-center justify-between p-4 border-b border-purple">
-          <h3 id="resv-title" class="text-lg font-semibold text-fg-font">Pasirinkite laiką</h3>
-          <button id="resv-close" type="button"
-            class="p-2 rounded text-fg-font hover:text-pink transition-colors duration-200"
-            aria-label="Uždaryti">
-            <i class="bx bx-x text-2xl leading-none"></i>
-            </button>
+<div id="resv-modal" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+  <div class="absolute inset-0 bg-black/50"></div>
+  <div class="absolute inset-0 flex items-center justify-center p-4">
+    <div role="dialog" aria-modal="true" aria-labelledby="resv-title"
+         class="w-full max-w-xl rounded-xl bg-fg shadow-lg">
+      <div class="flex items-center justify-between p-4 border-b border-purple">
+        <h3 id="resv-title" class="text-lg font-semibold text-fg-font">Pasirinkite laiką</h3>
+        <button id="resv-close" type="button"
+          class="p-2 rounded text-fg-font hover:text-pink transition-colors duration-200"
+          aria-label="Uždaryti">
+          <i class="bx bx-x text-2xl leading-none"></i>
+        </button>
+      </div>
+
+      <div class="p-4 space-y-4">
+        <div class="flex items-center gap-3">
+          <label for="resv-service" class="text-sm text-fg-font whitespace-nowrap">Paslauga</label>
+          <select id="resv-service" class="rounded px-3 py-2 bg-fg-light text-fg-font w-full">
+            <option value="">— Pasirink —</option>
+          </select>
         </div>
-        <div class="p-4 space-y-4">
-          <div class="flex items-center gap-3">
-            <label for="resv-date" class="text-sm text-fg-font whitespace-nowrap">Data</label>
-            <input id="resv-date" type="date" class="rounded px-3 py-2 bg-fg-light text-fg-font" />
-          </div>
-          <div id="resv-loading" class="text-fg-font/80 hidden">Kraunama…</div>
-          <div id="resv-error" class="text-red-700 hidden"></div>
-          <div id="resv-slots" class="grid grid-cols-2 md:grid-cols-3 gap-2"></div>
+
+        <div class="flex items-center gap-3">
+          <label for="resv-date" class="text-sm text-fg-font whitespace-nowrap">Data</label>
+          <input id="resv-date" type="date" class="rounded px-3 py-2 bg-fg-light text-fg-font" />
         </div>
-        <div class="p-4 flex justify-end gap-2 border-t border-purple">
-          <button type="button" class="px-4 py-2 bg-fg-light rounded text-fg-font hover:bg-comment transition duration-150 ease-in" id="resv-cancel">Atšaukti</button>
-          <form id="resv-form" method="get" action="reserve.php" class="hidden">
-            <input type="hidden" name="elektrikas" id="resv-elektrikas">
-            <input type="hidden" name="date" id="resv-date-hidden">
-            <input type="hidden" name="start" id="resv-start-hidden">
-          </form>
-          <button id="resv-next" type="button" class="px-4 py-2 bg-pink text-fg-font rounded disabled:opacity-50 hover:bg-green transition duration-150 ease-in" disabled>
-            Tęsti
-          </button>
-        </div>
+
+        <div id="resv-loading" class="text-fg-font/80 hidden">Kraunama…</div>
+        <div id="resv-error" class="text-red hidden" role="status" aria-live="polite"></div>
+        <div id="resv-slots" class="grid grid-cols-2 md:grid-cols-3 gap-2"></div>
+      </div>
+
+      <div class="p-4 flex justify-end gap-2 border-t border-purple">
+        <button type="button"
+                class="px-4 py-2 bg-fg-light rounded text-fg-font hover:bg-comment transition duration-150 ease-in"
+                id="resv-cancel">Atšaukti</button>
+
+        <button id="resv-next" type="button"
+                class="px-4 py-2 bg-pink text-fg-font rounded disabled:opacity-50 hover:bg-green transition duration-150 ease-in"
+                disabled>
+          Tęsti
+        </button>
       </div>
     </div>
   </div>
+</div>
 
-  <script src="./static/js/home.js"></script>
+  <script src="./static/js/home.js" defer></script>
 </body>
 </html>

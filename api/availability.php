@@ -26,7 +26,7 @@ if ($eid <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
 }
 
 $stmt = $mysqli->prepare("
-  SELECT e.savaites_grafikas, e.statusas, e.rodomas_viesai
+  SELECT e.savaites_grafikas, e.statusas
   FROM ElektrikoProfilis e
   WHERE e.id = ?
   LIMIT 1
@@ -36,8 +36,8 @@ $stmt->execute();
 $row = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-if (!$row || $row['statusas'] !== 'PATVIRTINTAS' || (int)$row['rodomas_viesai'] !== 1) {
-  respond(['error' => 'Elektrikas nerastas arba nerodomas viešai'], 404);
+if (!$row || $row['statusas'] !== 'PATVIRTINTAS') {
+  respond(['error' => 'Elektrikas nerastas arba nepatvirtintas.'], 404);
 }
 
 $grafikas = [];

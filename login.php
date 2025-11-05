@@ -7,10 +7,17 @@ $DB_NAME = "tinklai";
 $DB_USER = "tinklai";
 $DB_PASS = getenv('DB_PASS') ?: '';
 
-
 const REMEMBER_COOKIE = 'auth_token';
 const REMEMBER_DAYS   = 30;
-$APP_SECRET_KEY  = getenv('APP_SECRET_KEY') ?: '123';
+
+define('APP_SECRET_KEY', getenv('APP_SECRET_KEY') !== false && getenv('APP_SECRET_KEY') !== ''
+  ? getenv('APP_SECRET_KEY')
+  : 'change-me');
+
+if (APP_SECRET_KEY === '' || APP_SECRET_KEY === 'change-me') {
+  http_response_code(500);
+  exit;
+}
 
 $sessionLifetime = 0;
 if (!empty($_COOKIE[REMEMBER_COOKIE])) {
@@ -41,7 +48,8 @@ function issue_remember_cookie(int $userId, string $email, string $role): void {
   $exp = time() + (REMEMBER_DAYS * 86400);
   $nonce = bin2hex(random_bytes(8));
   $payload = $userId . '|' . $email . '|' . $role . '|' . $exp . '|' . $nonce;
-  $sig = hash_hmac('sha256', $payload, $APP_SECRET_KEY);
+  // Use the constant, not a local variable
+  $sig = hash_hmac('sha256', $payload, APP_SECRET_KEY);
   $token = base64_encode($payload . '|' . $sig);
   setcookie(REMEMBER_COOKIE, $token, [
     'expires'  => $exp,
@@ -52,7 +60,13 @@ function issue_remember_cookie(int $userId, string $email, string $role): void {
   ]);
 }
 function clear_remember_cookie(): void {
-  setcookie(REMEMBER_COOKIE, '', time()-3600, '/');
+  setcookie(REMEMBER_COOKIE, '', [
+    'expires'  => time() - 3600,
+    'path'     => '/',
+    'httponly' => true,
+    'samesite' => 'Lax',
+    'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+  ]);
 }
 function try_auto_login_from_cookie(mysqli $db): bool {
   if (empty($_COOKIE[REMEMBER_COOKIE])) return false;
@@ -64,7 +78,7 @@ function try_auto_login_from_cookie(mysqli $db): bool {
   if (!ctype_digit($userId) || !ctype_digit($exp)) return false;
   if ((int)$exp < time()) return false;
   $payload = $userId . '|' . $email . '|' . $role . '|' . $exp . '|' . $nonce;
-  $calcSig = hash_hmac('sha256', $payload, $APP_SECRET_KEY);
+  $calcSig = hash_hmac('sha256', $payload, APP_SECRET_KEY);
   if (!hash_equals($calcSig, $sig)) return false;
 
   $stmt = $db->prepare("SELECT id, el_pastas, vardas, role FROM Naudotojas WHERE id = ? AND el_pastas = ? LIMIT 1");

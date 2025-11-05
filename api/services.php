@@ -1,6 +1,13 @@
 <?php
-header('Content-Type: application/json; charset=utf-8');
+// api/services.php
 mb_internal_encoding('UTF-8');
+header('Content-Type: application/json; charset=utf-8');
+
+function respond($arr, $code = 200){
+  http_response_code($code);
+  echo json_encode($arr, JSON_UNESCAPED_UNICODE);
+  exit;
+}
 
 $DB_HOST = "db";
 $DB_PORT = 3306;
@@ -8,55 +15,57 @@ $DB_NAME = "tinklai";
 $DB_USER = "tinklai";
 $DB_PASS = getenv('DB_PASS') ?: '';
 
+$eid = isset($_GET['elektrikas']) ? (int)$_GET['elektrikas'] : 0;
+if ($eid <= 0) respond(['ok'=>false,'error'=>'Trūksta elektriko ID'], 400);
+
 $mysqli = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME, $DB_PORT);
-if ($mysqli->connect_errno) {
-  http_response_code(500);
-  echo json_encode(['error' => 'DB klaida']);
-  exit;
-}
+if ($mysqli->connect_errno) respond(['ok'=>false,'error'=>'DB klaida'], 500);
 $mysqli->set_charset('utf8mb4');
 
-$eid = isset($_GET['elektrikas']) ? (int)$_GET['elektrikas'] : 0;
-if ($eid <= 0) {
-  http_response_code(400);
-  echo json_encode(['error' => 'Neteisingas elektriko ID']);
-  exit;
-}
-
-$stmt = $mysqli->prepare("
-  SELECT n.vardas, n.pavarde, n.miestas
-  FROM ElektrikoProfilis e
-  JOIN Naudotojas n ON n.id = e.id
-  WHERE e.id = ? AND e.rodomas_viesai = 1 AND e.statusas = 'PATVIRTINTAS'
-  LIMIT 1
-");
-$stmt->bind_param("i", $eid);
-$stmt->execute();
-$header = $stmt->get_result()->fetch_assoc();
-$stmt->close();
-
-if (!$header) {
-  http_response_code(404);
-  echo json_encode(['error' => 'Elektrikas nerastas ar nerodomas viešai']);
-  exit;
-}
-
-$stmt = $mysqli->prepare("
-  SELECT s.pavadinimas, s.aprasas, p.kaina_bazine, p.tipine_trukme_min
+/*
+  Schema (per your screenshots):
+    Pasiula: elektriko_profilis, paslauga, kaina_bazine, tipine_trukme_min
+    Paslauga: id, pavadinimas, aprasas
+  We return one row per paslauga for this electrician.
+  We avoid ONLY_FULL_GROUP_BY issues by aggregating name/desc with MIN()
+  (safe because each Paslauga.id has a single name/desc).
+*/
+$sql = "
+  SELECT
+    p.paslauga                                        AS paslauga_id,
+    MIN(p.kaina_bazine)                               AS kaina_bazine,
+    COALESCE(NULLIF(MIN(p.tipine_trukme_min),0), 30)  AS tipine_trukme_min,
+    MIN(s.pavadinimas)                                AS pavadinimas,
+    MIN(s.aprasas)                                    AS aprasas
   FROM Pasiula p
   JOIN Paslauga s ON s.id = p.paslauga
   WHERE p.elektriko_profilis = ?
-  ORDER BY s.pavadinimas ASC
-");
+  GROUP BY p.paslauga
+  ORDER BY MIN(s.pavadinimas) ASC
+";
+$stmt = $mysqli->prepare($sql);
 $stmt->bind_param("i", $eid);
 $stmt->execute();
-$rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$res = $stmt->get_result();
+
+$services = [];
+while ($row = $res->fetch_assoc()) {
+  $services[] = [
+    // IMPORTANT: this is what reserve.php expects
+    'paslauga'          => (int)$row['paslauga_id'],
+    // Display fields
+    'pavadinimas'       => $row['pavadinimas'],
+    'aprasas'           => $row['aprasas'],
+    'kaina_bazine'      => $row['kaina_bazine'],
+    'tipine_trukme_min' => (int)$row['tipine_trukme_min'],
+  ];
+}
 $stmt->close();
 
-$mysqli->close();
-
-echo json_encode([
+// No header name fields (ElektrikoProfilis has no vardas/pavarde/miestas)
+respond([
+  'ok'         => true,
   'elektrikas' => $eid,
-  'n' => $header,
-  'paslaugos' => $rows,
-], JSON_UNESCAPED_UNICODE);
+  'n'          => null,      // your front-end is already null-safe
+  'paslaugos'  => $services,
+]);

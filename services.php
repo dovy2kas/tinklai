@@ -34,7 +34,6 @@ if ($mysqli->connect_errno) {
 }
 $mysqli->set_charset('utf8mb4');
 
-/* --- User & role --- */
 $userId = (int)$_SESSION['user_id'];
 $stmt = $mysqli->prepare("SELECT vardas, role FROM Naudotojas WHERE id = ? LIMIT 1");
 $stmt->bind_param("i", $userId);
@@ -54,7 +53,6 @@ if ($user['role'] !== 'ELEKTRIKAS') {
 $loggedIn = true;
 $role = $user['role'];
 
-/* --- Add service handler --- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_service') {
   $paslaugaId = isset($_POST['paslauga']) ? (int)$_POST['paslauga'] : 0;
   $kaina = isset($_POST['kaina_bazine']) ? trim($_POST['kaina_bazine']) : '';
@@ -98,7 +96,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
   redirect('services.php');
 }
 
-/* --- Current offers --- */
 $stmt = $mysqli->prepare("
   SELECT p.paslauga, s.pavadinimas, s.aprasas, p.kaina_bazine, p.tipine_trukme_min
   FROM Pasiula p
@@ -111,7 +108,6 @@ $stmt->execute();
 $offers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-/* --- Services still available to add --- */
 $stmt = $mysqli->prepare("
   SELECT s.id, s.pavadinimas
   FROM Paslauga s
@@ -137,10 +133,9 @@ $mysqli->close();
 </head>
 <body class="bg-bg min-h-screen">
 
-  <!-- NAVBAR (identical look/logic to home.php) -->
-  <nav class="bg-fg border-gray-200">
+  <nav class="bg-fg border-purple border-b-2 mb-10">
     <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-      <span class="text-2xl font-semibold text-fg-font">Elektrikus vienijanti sistema</span>
+      <span class="text-2xl font-bold text-purple">Elektrikus vienijanti sistema</span>
       <div class="hidden w-full md:block md:w-auto">
         <ul class="font-medium flex flex-col md:flex-row md:space-x-8">
           <li>
@@ -154,12 +149,8 @@ $mysqli->close();
                 Mano paslaugos
               </a>
             </li>
+            <li><a href="manage_reservations.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">Valdyti rezervacijas</a></li>
           <?php endif; ?>
-          <li>
-            <a href="profile.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">
-              Profilis
-            </a>
-          </li>
           <?php if ($loggedIn): ?>
             <li>
               <form action="logout.php" method="post">
@@ -218,7 +209,6 @@ $mysqli->close();
     <?php endif; ?>
   </main>
 
-  <!-- Add service modal -->
   <div id="modal" class="fixed inset-0 z-50 hidden">
     <div class="absolute inset-0 bg-black/50"></div>
     <div class="absolute inset-0 flex items-center justify-center p-4">

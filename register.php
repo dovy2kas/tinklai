@@ -115,8 +115,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $schedStr  = !empty($grafikas) ? json_encode($grafikas, JSON_UNESCAPED_UNICODE) : null;
 
       $stmt = $mysqli->prepare("
-        INSERT INTO ElektrikoProfilis (id, statusas, cv, nuotraukos, savaites_grafikas, rodomas_viesai)
-        VALUES (?, 'LAUKIANTIS', ?, ?, ?, 0)
+        INSERT INTO ElektrikoProfilis (id, statusas, cv, nuotraukos, savaites_grafikas)
+        VALUES (?, 'LAUKIANTIS', ?, ?, ?)
       ");
       $stmt->bind_param("isss", $userId, $cvParam, $photosStr, $schedStr);
       $stmt->execute();
