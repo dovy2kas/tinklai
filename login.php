@@ -48,7 +48,6 @@ function issue_remember_cookie(int $userId, string $email, string $role): void {
   $exp = time() + (REMEMBER_DAYS * 86400);
   $nonce = bin2hex(random_bytes(8));
   $payload = $userId . '|' . $email . '|' . $role . '|' . $exp . '|' . $nonce;
-  // Use the constant, not a local variable
   $sig = hash_hmac('sha256', $payload, APP_SECRET_KEY);
   $token = base64_encode($payload . '|' . $sig);
   setcookie(REMEMBER_COOKIE, $token, [
@@ -166,7 +165,13 @@ if ($mysqli->connect_errno) {
       <h2 class="text-2xl font-semibold mb-2 text-purple">Prisijungti</h2>
 
       <?php if ($msg = flash('flash_error')): ?>
-        <div class="mb-4 rounded border border-red-200 bg-red-50 text-red-800 px-4 py-3"><?= h($msg) ?></div>
+        <div class="mb-4 rounded border border-purple bg-fg text-red px-4 py-3"><?= h($msg) ?></div>
+      <?php endif; ?>
+      
+      <?php if (!empty($_SESSION['flash_success'])): ?>
+        <div class="mb-4 rounded border border-emerald-200 bg-emerald-50 text-emerald-800 px-4 py-3">
+          <?= htmlspecialchars($_SESSION['flash_success'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash_success']); ?>
+        </div>
       <?php endif; ?>
 
       <form id="form-login" class="space-y-4" method="post" novalidate>

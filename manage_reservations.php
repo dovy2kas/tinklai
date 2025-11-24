@@ -126,12 +126,13 @@ function fmtDt($s){
         <?php if ($role === 'ELEKTRIKAS'): ?>
           <li><a href="services.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">Mano paslaugos</a></li>
           <li><a href="manage_reservations.php" class="block py-2 px-3 text-pink">Valdyti rezervacijas</a></li>
+          <li><a href="calendar.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">Mano kalendorius</a></li>
         <?php endif; ?>
 
         <?php if ($role === 'NAUDOTOJAS'): ?>
           <li><a href="reservations.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">Mano rezervacijos</a></li>
         <?php endif; ?>
-
+        <li><a href="faq.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">DUK</a></li>
         <?php if ($loggedIn): ?>
           <li>
             <form action="logout.php" method="post">

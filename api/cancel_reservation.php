@@ -1,5 +1,4 @@
 <?php
-// api/cancel_reservation.php
 mb_internal_encoding('UTF-8');
 header('Content-Type: application/json; charset=utf-8');
 
@@ -39,7 +38,6 @@ $mysqli->set_charset('utf8mb4');
 
 $uid = (int)$_SESSION['user_id'];
 
-// Check ownership + status
 $stmt = $mysqli->prepare("SELECT statusas, pradzia FROM Rezervacija WHERE id = ? AND naudotojas = ? LIMIT 1");
 $stmt->bind_param("ii", $id, $uid);
 $stmt->execute();
@@ -52,7 +50,6 @@ $pradziaTs = strtotime($row['pradzia']);
 $allowed = in_array($row['statusas'], ['LAUKIA','PATVIRTINTA'], true) && ($pradziaTs === false || $pradziaTs > time());
 if (!$allowed) respond(['ok'=>false,'error'=>'Negalima atšaukti šios rezervacijos'], 400);
 
-// Cancel → ATMESTA (matches your enum)
 $new = 'ATMESTA';
 $u = $mysqli->prepare("UPDATE Rezervacija SET statusas = ? WHERE id = ? AND naudotojas = ? LIMIT 1");
 $u->bind_param("sii", $new, $id, $uid);

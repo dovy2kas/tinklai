@@ -1,5 +1,4 @@
 <?php
-// api/services.php
 mb_internal_encoding('UTF-8');
 header('Content-Type: application/json; charset=utf-8');
 
@@ -22,14 +21,6 @@ $mysqli = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME, $DB_PORT);
 if ($mysqli->connect_errno) respond(['ok'=>false,'error'=>'DB klaida'], 500);
 $mysqli->set_charset('utf8mb4');
 
-/*
-  Schema (per your screenshots):
-    Pasiula: elektriko_profilis, paslauga, kaina_bazine, tipine_trukme_min
-    Paslauga: id, pavadinimas, aprasas
-  We return one row per paslauga for this electrician.
-  We avoid ONLY_FULL_GROUP_BY issues by aggregating name/desc with MIN()
-  (safe because each Paslauga.id has a single name/desc).
-*/
 $sql = "
   SELECT
     p.paslauga                                        AS paslauga_id,
@@ -51,9 +42,7 @@ $res = $stmt->get_result();
 $services = [];
 while ($row = $res->fetch_assoc()) {
   $services[] = [
-    // IMPORTANT: this is what reserve.php expects
     'paslauga'          => (int)$row['paslauga_id'],
-    // Display fields
     'pavadinimas'       => $row['pavadinimas'],
     'aprasas'           => $row['aprasas'],
     'kaina_bazine'      => $row['kaina_bazine'],
@@ -62,10 +51,9 @@ while ($row = $res->fetch_assoc()) {
 }
 $stmt->close();
 
-// No header name fields (ElektrikoProfilis has no vardas/pavarde/miestas)
 respond([
   'ok'         => true,
   'elektrikas' => $eid,
-  'n'          => null,      // your front-end is already null-safe
+  'n'          => null,
   'paslaugos'  => $services,
 ]);

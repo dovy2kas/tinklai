@@ -51,7 +51,8 @@ $sql = "
     s.pavadinimas AS paslaugos_pavadinimas,
     n.vardas AS e_vardas,
     n.pavarde AS e_pavarde,
-    n.miestas AS e_miestas
+    n.miestas AS e_miestas,
+    n.tel AS e_tel
   FROM Rezervacija r
   LEFT JOIN Paslauga s           ON s.id = r.paslauga
   LEFT JOIN ElektrikoProfilis e  ON e.id = r.elektriko_profilis
@@ -106,8 +107,10 @@ function fmtDt($s){
           <?php if ($role === 'ELEKTRIKAS'): ?>
             <li><a href="services.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">Mano paslaugos</a></li>
             <li><a href="manage_reservations.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">Valdyti rezervacijas</a></li>
+            <li><a href="calendar.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">Mano kalendorius</a></li>
           <?php endif; ?>
           <li><a href="reservations.php" class="block py-2 px-3 text-pink transition duration-150 ease-in">Mano rezervacijos</a></li>
+          <li><a href="faq.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">DUK</a></li>
           <li>
             <form action="logout.php" method="post">
               <button class="py-2 px-3 rounded-sm bg-red-600 text-comment hover:text-pink transition duration-150 ease-in">Atsijungti</button>
@@ -146,6 +149,7 @@ function fmtDt($s){
                 <th class="py-2 px-3">#</th>
                 <th class="py-2 px-3">Elektrikas</th>
                 <th class="py-2 px-3">Miestas</th>
+                <th class="py-2 px-3">Telefonas</th>
                 <th class="py-2 px-3">Paslauga</th>
                 <th class="py-2 px-3">Pradžia</th>
                 <th class="py-2 px-3">Pabaiga</th>
@@ -164,10 +168,15 @@ function fmtDt($s){
                   <td class="py-3 px-3">#<?= (int)$r['id'] ?></td>
                   <td class="py-3 px-3"><?= $ename!=='' ? h($ename) : 'Elektrikas #'.(int)$r['elektrikas_id'] ?></td>
                   <td class="py-3 px-3"><?= h($r['e_miestas'] ?? '') ?></td>
+                  <td class="py-3 px-3"><?= h($r['e_tel'] ?? '') ?></td>
                   <td class="py-3 px-3"><?= h($r['paslaugos_pavadinimas'] ?? ('Paslauga #'.(int)$r['paslauga'])) ?></td>
                   <td class="py-3 px-3"><?= fmtDt($r['pradzia']) ?></td>
                   <td class="py-3 px-3"><?= fmtDt($r['pabaiga']) ?></td>
-                  <td class="py-3 px-3"><span class="status-chip <?= 'chip-'.h($r['statusas']) ?>"><?= h($r['statusas']) ?></span></td>
+                  <td class="py-3 px-3">
+                    <span class="status-chip <?= 'chip-'.h($r['statusas']) ?>">
+                      <?= h($r['statusas']) ?>
+                    </span>
+                  </td>
                   <td class="py-3 px-3"><?= nl2br(h($r['pastabos'] ?? '')) ?></td>
                   <td class="py-3 px-3 text-right">
                     <?php if ($canCancel): ?>
@@ -189,39 +198,40 @@ function fmtDt($s){
       </div>
     <?php endif; ?>
   </main>
+
   <div id="cancel-modal" class="fixed inset-0 z-50 hidden" aria-hidden="true">
-  <div id="cancel-overlay" class="absolute inset-0 bg-black/50"></div>
-  <div class="absolute inset-0 flex items-center justify-center p-4">
-    <div role="dialog" aria-modal="true" aria-labelledby="cancel-title"
-         class="w-full max-w-md rounded-xl bg-fg shadow-lg">
-      <div class="flex items-center justify-between p-4 border-b border-purple">
-        <h3 id="cancel-title" class="text-lg font-semibold text-fg-font">Atšaukti rezervaciją</h3>
-        <button id="cancel-close" type="button"
-          class="p-2 rounded text-fg-font hover:text-pink transition-colors duration-200"
-          aria-label="Uždaryti">
-          <i class="bx bx-x text-2xl leading-none"></i>
-        </button>
-      </div>
-      <div class="p-4 space-y-3">
-        <p id="cancel-text" class="text-fg-font">
-          Ar tikrai nori atšaukti šią rezervaciją?
-        </p>
-        <p class="text-sm text-fg-font/70" id="cancel-details"></p>
-        <div id="cancel-error" class="text-red-600 text-sm hidden"></div>
-      </div>
-      <div class="p-4 flex justify-end gap-2 border-t border-purple">
-        <button type="button" id="cancel-no"
-          class="px-4 py-2 bg-fg-light rounded text-fg-font hover:bg-comment transition duration-150 ease-in">
-          Ne
-        </button>
-        <button type="button" id="cancel-yes"
-          class="px-4 py-2 bg-pink text-fg-font rounded disabled:opacity-50 hover:bg-green transition duration-150 ease-in">
-          Taip, atšaukti
-        </button>
+    <div id="cancel-overlay" class="absolute inset-0 bg-black/50"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+      <div role="dialog" aria-modal="true" aria-labelledby="cancel-title"
+           class="w-full max-w-md rounded-xl bg-fg shadow-lg">
+        <div class="flex items-center justify-between p-4 border-b border-purple">
+          <h3 id="cancel-title" class="text-lg font-semibold text-fg-font">Atšaukti rezervaciją</h3>
+          <button id="cancel-close" type="button"
+            class="p-2 rounded text-fg-font hover:text-pink transition-colors duration-200"
+            aria-label="Uždaryti">
+            <i class="bx bx-x text-2xl leading-none"></i>
+          </button>
+        </div>
+        <div class="p-4 space-y-3">
+          <p id="cancel-text" class="text-fg-font">
+            Ar tikrai nori atšaukti šią rezervaciją?
+          </p>
+          <p class="text-sm text-fg-font/70" id="cancel-details"></p>
+          <div id="cancel-error" class="text-red-600 text-sm hidden"></div>
+        </div>
+        <div class="p-4 flex justify-end gap-2 border-t border-purple">
+          <button type="button" id="cancel-no"
+            class="px-4 py-2 bg-fg-light rounded text-fg-font hover:bg-comment transition duration-150 ease-in">
+            Ne
+          </button>
+          <button type="button" id="cancel-yes"
+            class="px-4 py-2 bg-pink text-fg-font rounded disabled:opacity-50 hover:bg-green transition duration-150 ease-in">
+            Taip, atšaukti
+          </button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
   <script>window.__RESV_CSRF__ = <?= json_encode($csrf) ?>;</script>
   <script src="./static/js/reservations.js" defer></script>

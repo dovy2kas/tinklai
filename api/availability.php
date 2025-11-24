@@ -1,4 +1,4 @@
-<?php
+<?php 
 header('Content-Type: application/json; charset=utf-8');
 mb_internal_encoding('UTF-8');
 
@@ -18,7 +18,7 @@ $mysqli = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME, $DB_PORT);
 if ($mysqli->connect_errno) respond(['error'=>'DB klaida'], 500);
 $mysqli->set_charset('utf8mb4');
 
-$eid = isset($_GET['elektrikas']) ? (int)$_GET['elektrikas'] : 0;
+$eid  = isset($_GET['elektrikas']) ? (int)$_GET['elektrikas'] : 0;
 $date = isset($_GET['date']) ? trim($_GET['date']) : '';
 
 if ($eid <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
@@ -47,13 +47,28 @@ if (!empty($row['savaites_grafikas'])) {
 }
 
 $ts = strtotime($date . ' 00:00:00');
-$weekday = (int)date('N', $ts);
+if ($ts === false) {
+  respond(['error' => 'Bloga data'], 400);
+}
+$weekday = (int)date('N', $ts); // 1–7
 
-if (empty($grafikas[(string)$weekday]) || !is_array($grafikas[(string)$weekday])) {
-  respond(['elektrikas' => $eid, 'date' => $date, 'slots' => []]);
+$intervals = [];
+
+if (isset($grafikas['dates']) && is_array($grafikas['dates']) && array_key_exists($date, $grafikas['dates'])) {
+  $intervals = $grafikas['dates'][$date];
+  if (!is_array($intervals)) {
+    $intervals = [];
+  }
+} else {
+  $key = (string)$weekday;
+  if (!empty($grafikas[$key]) && is_array($grafikas[$key])) {
+    $intervals = $grafikas[$key];
+  }
 }
 
-$intervals = $grafikas[(string)$weekday];
+if (empty($intervals)) {
+  respond(['elektrikas' => $eid, 'date' => $date, 'slots' => []]);
+}
 
 $stmt = $mysqli->prepare("
   SELECT pradzia, pabaiga
@@ -85,6 +100,8 @@ foreach ($intervals as $pair) {
   $start = strtotime("$date $from:00");
   $end   = strtotime("$date $to:00");
 
+  if ($start === false || $end === false || $end <= $start) continue;
+
   for ($t = $start; $t + $slotLen <= $end; $t += $slotLen) {
     $slotStart = $t;
     $slotEnd   = $t + $slotLen;
@@ -95,7 +112,10 @@ foreach ($intervals as $pair) {
 
     $overlap = false;
     foreach ($busy as [$bStart, $bEnd]) {
-      if ($slotStart < $bEnd && $slotEnd > $bStart) { $overlap = true; break; }
+      if ($slotStart < $bEnd && $slotEnd > $bStart) {
+        $overlap = true;
+        break;
+      }
     }
     if (!$overlap) {
       $slots[] = date('H:i', $slotStart);

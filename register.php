@@ -152,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <h2 class="text-2xl font-semibold mb-6 text-purple">Registruotis</h2>
 
       <?php if (!empty($_SESSION['flash_error'])): ?>
-        <div class="mb-4 rounded border border-red-200 bg-red-50 text-red-800 px-4 py-3">
+        <div class="mb-4 rounded border border-purple bg-fg text-red px-4 py-3">
           <?= htmlspecialchars($_SESSION['flash_error'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash_error']); ?>
         </div>
       <?php endif; ?>

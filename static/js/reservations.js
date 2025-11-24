@@ -1,9 +1,7 @@
-// static/js/reservations.js
 (function () {
   const $  = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-  /* ----- Toasts ----- */
   function ensureToastContainer() {
     let c = $('#toast-container');
     if (!c) {
@@ -30,7 +28,6 @@
     setTimeout(() => { t.style.opacity='0'; setTimeout(() => t.remove(), 300); }, timeout);
   }
 
-  /* ----- API ----- */
   async function cancelReservation(id, csrf) {
     const res = await fetch('api/cancel_reservation.php', {
       method: 'POST',
@@ -47,7 +44,6 @@
     return data;
   }
 
-  /* ----- Modal helpers ----- */
   const cancelModal   = $('#cancel-modal');
   const cancelOverlay = $('#cancel-overlay');
   const cancelClose   = $('#cancel-close');
@@ -66,7 +62,6 @@
     pending = { id, csrf, row, button };
     if (cancelText) cancelText.textContent = 'Ar tikrai nori atšaukti šią rezervaciją?';
     if (cancelDetails) {
-      // Try to show some context pulled from the row
       const cells = row ? row.querySelectorAll('td') : null;
       const who   = cells && cells[1] ? cells[1].textContent.trim() : '';
       const whenS = cells && cells[4] ? cells[4].textContent.trim() : '';
@@ -89,14 +84,12 @@
 
   cancelYes?.addEventListener('click', async () => {
     if (!pending.id || !pending.csrf) return;
-    // lock buttons while canceling
     cancelYes.disabled = true;
     cancelNo && (cancelNo.disabled = true);
     try {
       const out = await cancelReservation(pending.id, pending.csrf);
       toast(`Rezervacija #${out.id} atšaukta`, 'success');
 
-      // Update the row UI
       if (pending.row) {
         const statusChip = pending.row.querySelector('td:nth-child(7) .status-chip');
         if (statusChip) {
@@ -116,7 +109,6 @@
     }
   });
 
-  /* ----- Bind table buttons ----- */
   function bindCancelButtons(){
     $$('.js-cancel').forEach(btn => {
       btn.addEventListener('click', (e) => {

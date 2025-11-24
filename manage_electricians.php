@@ -87,6 +87,7 @@ $mysqli->close();
       <ul class="font-medium flex flex-col md:flex-row md:space-x-8">
         <li><a href="home.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">Pagrindinis</a></li>
         <li><a href="manage_electricians.php" class="block py-2 px-3 text-pink transition duration-150 ease-in">Elektrikų tvirtinimas</a></li>
+        <li><a href="faq.php" class="block py-2 px-3 text-comment hover:text-pink transition duration-150 ease-in">DUK</a></li>
         <li>
           <form action="logout.php" method="post">
             <button class="py-2 px-3 rounded-sm bg-red-600 text-comment hover:text-pink transition duration-150 ease-in">Atsijungti</button>
