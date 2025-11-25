@@ -8,11 +8,11 @@ session_start();
 
 function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
-$DB_HOST = "db";
+$DB_HOST = "localhost";
 $DB_PORT = 3306;
 $DB_NAME = "tinklai";
-$DB_USER = "tinklai";
-$DB_PASS = getenv('DB_PASS') ?: '';
+$DB_USER = "stud";
+$DB_PASS = 'stud';
 
 $mysqli = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME, $DB_PORT);
 if ($mysqli->connect_errno) { http_response_code(500); echo "DB klaida: ".h($mysqli->connect_error); exit; }

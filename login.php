@@ -1,11 +1,11 @@
 <?php
 mb_internal_encoding('UTF-8');
 
-$DB_HOST = "db";
+$DB_HOST = "localhost";
 $DB_PORT = 3306;
 $DB_NAME = "tinklai";
-$DB_USER = "tinklai";
-$DB_PASS = getenv('DB_PASS') ?: '';
+$DB_USER = "stud";
+$DB_PASS = 'stud';
 
 const REMEMBER_COOKIE = 'auth_token';
 const REMEMBER_DAYS   = 30;

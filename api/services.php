@@ -8,11 +8,11 @@ function respond($arr, $code = 200){
   exit;
 }
 
-$DB_HOST = "db";
+$DB_HOST = "localhost";
 $DB_PORT = 3306;
 $DB_NAME = "tinklai";
-$DB_USER = "tinklai";
-$DB_PASS = getenv('DB_PASS') ?: '';
+$DB_USER = "stud";
+$DB_PASS = 'stud';
 
 $eid = isset($_GET['elektrikas']) ? (int)$_GET['elektrikas'] : 0;
 if ($eid <= 0) respond(['ok'=>false,'error'=>'Trūksta elektriko ID'], 400);

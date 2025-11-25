@@ -26,11 +26,11 @@ if (!$csrf || !hash_equals($_SESSION['csrf'] ?? '', $csrf)) respond(['ok'=>false
 $id  = isset($req['id']) ? (int)$req['id'] : 0;
 if ($id <= 0) respond(['ok'=>false,'error'=>'Neteisingas ID'], 400);
 
-$DB_HOST = "db";
+$DB_HOST = "localhost";
 $DB_PORT = 3306;
 $DB_NAME = "tinklai";
-$DB_USER = "tinklai";
-$DB_PASS = getenv('DB_PASS') ?: '';
+$DB_USER = "stud";
+$DB_PASS = 'stud';
 
 $mysqli = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME, $DB_PORT);
 if ($mysqli->connect_errno) respond(['ok'=>false,'error'=>'DB klaida'], 500);

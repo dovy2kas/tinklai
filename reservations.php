@@ -8,11 +8,11 @@ session_start();
 
 function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 
-$DB_HOST = "db";
+$DB_HOST = "localhost";
 $DB_PORT = 3306;
 $DB_NAME = "tinklai";
-$DB_USER = "tinklai";
-$DB_PASS = getenv('DB_PASS') ?: '';
+$DB_USER = "stud";
+$DB_PASS = 'stud';
 
 if (empty($_SESSION['user_id'])) {
   header('Location: login.php?redirect='.urlencode('reservations.php'));
