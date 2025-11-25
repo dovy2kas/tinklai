@@ -14,11 +14,6 @@ define('APP_SECRET_KEY', getenv('APP_SECRET_KEY') !== false && getenv('APP_SECRE
   ? getenv('APP_SECRET_KEY')
   : 'change-me');
 
-if (APP_SECRET_KEY === '' || APP_SECRET_KEY === 'change-me') {
-  http_response_code(500);
-  exit;
-}
-
 $sessionLifetime = 0;
 if (!empty($_COOKIE[REMEMBER_COOKIE])) {
   $sessionLifetime = REMEMBER_DAYS * 86400;
