@@ -163,15 +163,14 @@ $mysqli->close();
               <span class="ml-4 text-sm text-fg-font/60 hidden group-open:inline">−</span>
             </summary>
             <div class="mt-2 text-sm text-fg-font/80">
-              Registruotis gali tiek paprasti vartotojai (klientai), tiek elektrikai. Registracijos metu pasirinksi,
-              kokį vaidmenį nori turėti.
+              Registruotis gali tiek paprasti vartotojai, tiek elektrikai. Registracijos metu pasirinksi kokį vaidmenį nori turėti.
             </div>
           </details>
         </div>
       </div>
 
       <div class="bg-fg rounded-xl shadow p-4 md:p-5">
-        <h2 class="text-xl font-semibold text-fg-font mb-3">Naudotojams (klientams)</h2>
+        <h2 class="text-xl font-semibold text-fg-font mb-3">Naudotojams</h2>
         <div class="space-y-2">
           <details class="group">
             <summary class="cursor-pointer font-semibold text-fg-font flex items-center justify-between">
@@ -182,7 +181,7 @@ $mysqli->close();
             <div class="mt-2 text-sm text-fg-font/80">
               <ol class="list-decimal list-inside space-y-1">
                 <li>Prisijunk prie sistemos kaip naudotojas.</li>
-                <li>Pagrindiniame puslapyje išsirink elektriką (gali filtruoti pagal miestą ir paslaugą).</li>
+                <li>Pagrindiniame puslapyje išsirink elektriką.</li>
                 <li>Paspausk „Rezervuoti konsultaciją“.</li>
                 <li>Pasirink paslaugą, datą ir laisvą laiką, patvirtink rezervaciją.</li>
               </ol>
@@ -209,7 +208,7 @@ $mysqli->close();
               <span class="ml-4 text-sm text-fg-font/60 hidden group-open:inline">−</span>
             </summary>
             <div class="mt-2 text-sm text-fg-font/80">
-              Prisijungęs naudotojas turi meniu punktą „Mano rezervacijos“. Čia matysi visas būsimas ir buvusias
+              Prisijungęs naudotojas mato meniu punktą „Mano rezervacijos“. Čia matysi visas būsimas ir buvusias
               konsultacijas bei jų būseną.
             </div>
           </details>
@@ -226,7 +225,7 @@ $mysqli->close();
               <span class="ml-4 text-sm text-fg-font/60 hidden group-open:inline">−</span>
             </summary>
             <div class="mt-2 text-sm text-fg-font/80">
-              Užsiregistruok kaip elektrikas, užpildyk profilį (CV, darbų nuotraukos, miestas) ir palauk,
+              Užsiregistruok kaip elektrikas, užpildyk profilį ir palauk
               kol administratorius patvirtins tavo profilį. Tik patvirtinti elektrikai matomi viešame sąraše.
             </div>
           </details>
@@ -271,7 +270,7 @@ $mysqli->close();
             </summary>
             <div class="mt-2 text-sm text-fg-font/80">
               Administratorius prisijungęs mato meniu punktą „Elektrikų tvirtinimas“. Čia gali peržiūrėti naujus
-              arba atnaujintus profilius, juos patvirtinti arba atmesti (pvz., jei nuotraukos netinkamos).
+              arba atnaujintus profilius, juos patvirtinti arba atmesti.
             </div>
           </details>
         </div>
